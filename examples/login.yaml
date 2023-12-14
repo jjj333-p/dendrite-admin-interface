@@ -1,0 +1,26 @@
+# Example configuration file for the bot client
+# Copy this to db/login.yaml and edit it to your liking
+
+# The address that the homeserver client api is reached on
+# AFAIK default dendrite installs will resolve to port 8008 on localhost
+# The bot will ALWAYS run administration http endpoints from localhost, this should be running on the machine that hosts Dendrite
+# The safest setting will always to be the direct domain of dendrite, for pain.agency this would be https://matrix.pain.agency (delegation)
+homeserver-url: 'localhost:8008'
+
+# The login token for the bot to use
+# This should be an admin account as the bot will use this to run Dendrite admin endpoints from
+# it is recomended that the bot have its own account to prevent conflict
+login-token: 'token'
+
+# The room that administration commands can be run from
+# Be careful with this room, any commands sent in that room will be accepted, regardless of PL
+# It is recomended for security that this room only be federated with instances under the same adminstration,
+# which will be an unfederated room 99% of the time.
+# At this time the bot does not support encrypted rooms as it is expected for the room to remain only on the homeserver it administers.
+# If there is no valid RoomID here, the bot wll create one, invite the 'authorized-users', and give them PL100
+administration-room: ''
+
+# Authorized Users
+# Users listed here will be invited and given PL100 when the bot creates a new Administration room
+authorized-users:
+  - '@bob:example.org'
