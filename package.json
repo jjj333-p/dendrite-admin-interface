@@ -1,0 +1,29 @@
+{
+  "name": "dendrite-admin-interface",
+  "version": "0.0.1",
+  "description": "A bot interface for administrating a Dendrite server using the administration api and some database interfacing ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jjj333-p/dendrite-admin-interface.git"
+  },
+  "keywords": [
+    "Dendrite",
+    "Matrix",
+    "Bot",
+    "Administration"
+  ],
+  "author": "jjj333-p",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/jjj333-p/dendrite-admin-interface/issues"
+  },
+  "homepage": "https://github.com/jjj333-p/dendrite-admin-interface#readme",
+  "dependencies": {
+    "matrix-bot-sdk": "^0.7.0",
+    "yaml": "^2.3.4"
+  }
+}
