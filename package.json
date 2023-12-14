@@ -25,5 +25,6 @@
   "dependencies": {
     "matrix-bot-sdk": "^0.7.0",
     "yaml": "^2.3.4"
-  }
+  },
+  "type": "module"
 }
