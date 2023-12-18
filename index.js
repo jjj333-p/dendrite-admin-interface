@@ -89,8 +89,11 @@ client.start().then( async () => {
 
   // to remotely monitor how often the bot restarts, to spot issues
   client.sendText(adminRoom, "Started.")
+
+    //if there is no room to work in there is no reason for the bot to be online
     .catch(() => {
       console.log("The bot is either not in the administration room, or does not have permission to send messages into it. Suggested remedy: empty `administration-room:` feild from login.yaml and let the bot create a new room.")
+      process.exit(1)
     })
 
 })
