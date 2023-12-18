@@ -4,11 +4,11 @@ import fs from "fs";
 import yaml from "js-yaml";
 
 //Parse YAML configuration file
-const loginFile       = fs.readFileSync('./db/login.yaml', 'utf8');
-const loginParsed     = yaml.load(loginFile);
+let   loginFile       = fs.readFileSync('./db/login.yaml', 'utf8');
+let   loginParsed     = yaml.load(loginFile);
 const homeserver      = loginParsed["homeserver-url"];
 const accessToken     = loginParsed["login-token"];
-const adminRoom       = loginParsed["administration-room"];
+let   adminRoom       = loginParsed["administration-room"];
 const authorizedUsers = loginParsed["authorized-users"];
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
@@ -35,7 +35,7 @@ client.start().then( async () => {
   //if the feild is empty then we should create a room
   if ( !adminRoom ) {
 
-    await client.createRoom({
+    adminRoom = await client.createRoom({
         initial_state:[
           {
               content: {
@@ -80,9 +80,17 @@ client.start().then( async () => {
       name:"Administration Room"
     })
 
+    //write new room id to the login file
+    loginParsed["administration-room"] = adminRoom
+    loginFile = yaml.dump(loginParsed)
+    fs.writeFile('./db/login.yaml', loginFile, () => {})
+
   }
 
-  //to remotely monitor how often the bot restarts, to spot issues
-  // client.sendText(adminRoom, "Started.")
+  // to remotely monitor how often the bot restarts, to spot issues
+  client.sendText(adminRoom, "Started.")
+    .catch(() => {
+      console.log("The bot is either not in the administration room, or does not have permission to send messages into it. Suggested remedy: empty `administration-room:` feild from login.yaml and let the bot create a new room.")
+    })
 
 })
