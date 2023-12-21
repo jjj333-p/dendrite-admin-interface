@@ -97,3 +97,31 @@ client.start().then( async () => {
     })
 
 })
+/*
+Makes an internal request to the global `homeserver` address following standard dendrite request.
+*/
+async function makeDendriteReq (reqType, command, arg1, arg2, body) {
+
+  //base url guaranteed to always be there
+  let url = homeserver + "/_dendrite/admin/" + command + "/" + arg1
+
+  //if there is a second argument add it 
+  if (arg2) url += ("/" + arg2)
+
+  //if body is supplied, stringify it to send in http request
+  let bodyStr = null
+  if (body) bodyStr = JSON.stringify(body)
+
+  //make the request and return whatever the promise resolves to
+  return (
+    (await fetch(url, {
+      method: reqType,
+      headers: {
+        "Authorization": "Bearer " + accessToken,
+        "Content-Type": "application/json"
+      },
+      body:bodyStr
+    })).json()
+  )
+
+}
