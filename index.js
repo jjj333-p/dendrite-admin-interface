@@ -127,8 +127,18 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
 }
 
+//data structure to hold commands
+let commandHandlers = new Map()
+
+//evacuate command
+commandHandlers.set("evacuate", ({contentByWords}) => {
+
+console.log(JSON.stringify(contentByWords))
+
+})
+
 //data structure to hold various handlers
-let eventHandlers = new map()
+let eventHandlers = new Map()
 
 //all m.room.message events will run through this function
 eventHandlers.set("m.room.message", async (roomId, event) => {
@@ -157,5 +167,27 @@ eventHandlers.set("m.room.message", async (roomId, event) => {
 
   //split into words, and filter out the empty strings because js is an actual meme language
   let contentByWords = contentAfterPrefix.split(" ").filter(a=>a)
+
+  //fetch handler based on the first word (the command)
+  let handler = commandHandlers.get(contentByWords[0])
+
+  //if no handler exists indicate its an unknown command and return out
+  if (!handler) {
+
+    await datapoints.client.sendEvent(datapoints.roomId, "m.reaction", ({
+
+        "m.relates_to": {
+            "event_id":datapoints.event["event_id"],
+            "key":"❌ | invalid cmd",
+            "rel_type": "m.annotation"
+        }
+
+    }))
+
+    return
+  }  
+
+  //run the command handler
+  handler({content:contentAfterPrefix, contentByWords:contentByWords})
 
 })
