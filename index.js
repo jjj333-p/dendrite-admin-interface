@@ -127,13 +127,69 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
 }
 
+async function evacuateUser(mxid){
+
+
+
+}
+
+//run dendrite admin endpoint to evacuate all users from `roomId`
+async function evacuateRoom(roomId){
+  makeDendriteReq("POST", "evacuateRoom", roomId,)
+    .then(e => client.sendHtmlNotice(adminRoom, ("Ran evacuateRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>")) )
+    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make request with error\n<pre><code>" + e + "</code></pre>")) )
+}
+
+//resolves roomAlias to roomId, and runs evacuateRoom(roomId)
+function evacuateRoomAlias(roomAlias) {
+
+  client.resolveRoom(roomAlias)
+    .then(evacuateRoom)
+    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | Ran into the following error resolving that roomID:\n<pre><code>" + e + "</code></pre>")) )
+
+}
+
 //data structure to hold commands
 let commandHandlers = new Map()
 
 //evacuate command
 commandHandlers.set("evacuate", ({contentByWords}) => {
 
-console.log(JSON.stringify(contentByWords))
+  //required for mxid, roomid, and room aliases
+  if ( ! contentByWords[1].includes(":") || ! contentByWords[1].includes(".") ) {
+
+    //this command will only be runnable in the admin room so we can assume to send the error there
+    client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[1] + "</code> does not appear to be a valid user ID, room ID, or room alias."))
+
+    //no need to proceed
+    return;
+
+  }
+
+  //first character will tell us what type of id it is
+  switch (contentByWords[1][0]) {
+
+    //user MXID
+    case "@":
+      evacuateUser(contentByWords[1])
+      break;
+
+    //roomID
+    case "!":
+      evacuateRoom(contentByWords[1])
+      break;
+
+    //room alias
+    case "#":
+      evacuateRoomAlias(contentByWords[1])
+      break;
+
+    //none of the above
+    default:
+      client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[1] + "</code> does not appear to be a valid user ID, room ID, or room alias."))
+      break;
+
+  }
 
 })
 
@@ -148,9 +204,6 @@ eventHandlers.set("m.room.message", async (roomId, event) => {
 
   // Don't handle non-text events
   if (event["content"]["msgtype"] !== "m.text") return;
-
-  //filter out events sent by the bot itself.
-  if (event["sender"] === await client.getUserId()) return;
 
   //if not a command, no reason to process any further
   if (!event["content"]["body"].startsWith(prefix)) return;
@@ -188,6 +241,23 @@ eventHandlers.set("m.room.message", async (roomId, event) => {
   }  
 
   //run the command handler
-  handler({content:contentAfterPrefix, contentByWords:contentByWords})
+  handler({content:contentAfterPrefix, contentByWords:contentByWords, event:event})
+
+})
+
+//when the client recieves an event
+client.on("room.event", async (roomId, event) => {
+
+  //ignore events sent by self, unless its a banlist policy update
+  if (event["sender"] === mxid) return;
+
+  //fetch the handler for that event type
+  let handler = eventHandlers.get(event["type"])
+
+  //if no handler, nothing to run
+  if (!handler) return;
+
+  //run handler
+  handler(roomId, event)
 
 })
