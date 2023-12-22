@@ -20,6 +20,9 @@ login-token: 'token'
 # If there is no valid RoomID here, the bot wll create one, invite the 'authorized-users', and give them PL100
 administration-room: ''
 
+# The prefix to have on all command messages.
+prefix: '.'
+
 # Authorized Users
 # Users listed here will be invited and given PL100 when the bot creates a new Administration room
 authorized-users:

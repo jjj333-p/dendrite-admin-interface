@@ -9,6 +9,7 @@ let   loginParsed     = yaml.load(loginFile);
 const homeserver      = loginParsed["homeserver-url"];
 const accessToken     = loginParsed["login-token"];
 let   adminRoom       = loginParsed["administration-room"];
+const prefix          = loginParsed["prefix"]
 const authorizedUsers = loginParsed["authorized-users"];
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
@@ -125,3 +126,33 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
   )
 
 }
+
+//data structure to hold various handlers
+let eventHandlers = new map()
+
+//all m.room.message events will run through this function
+eventHandlers.set("m.room.message", async (roomId, event) => {
+
+  //if no content in message
+  if (! event["content"]) return;
+
+  // Don't handle non-text events
+  if (event["content"]["msgtype"] !== "m.text") return;
+
+  //filter out events sent by the bot itself.
+  if (event["sender"] === await client.getUserId()) return;
+
+  //if not a command, no reason to process any further
+  if (!event["content"]["body"].startsWith(prefix)) return;
+
+  //it is critical for this bot to be able to respond, log an error and return out if unable to send messages
+  //shouldnt be a thrown error because account might be in rooms other than the admin channel
+  if (!(await client.userHasPowerLevelFor(mxid, roomId, "m.room.message", false))) { console.log( "Bot does not have adequate permissions to respond in " + roomId ); return }
+
+  //once we know it started with the prefix we can remove the prefix for better parcing 
+  let contentAfterPrefix = event["content"]["body"].substring(prefix.length)
+
+  //split into words, and filter out the empty strings because js is an actual meme language
+  let contentByWords = contentAfterPrefix.split(" ").filter(a=>a)
+
+})
