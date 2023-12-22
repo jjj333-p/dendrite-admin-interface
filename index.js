@@ -122,7 +122,7 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
       method: reqType,
       headers: {
         "Authorization": "Bearer " + accessToken,
-        // "Content-Type": "application/json"
+        "Content-Type": "application/json"
       },
       body:bodyStr
     }))
