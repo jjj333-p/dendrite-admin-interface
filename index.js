@@ -145,6 +145,9 @@ eventHandlers.set("m.room.message", async (roomId, event) => {
   //if not a command, no reason to process any further
   if (!event["content"]["body"].startsWith(prefix)) return;
 
+  //if not the admin room, commands should not be run
+  if (roomId != adminRoom) return;
+
   //it is critical for this bot to be able to respond, log an error and return out if unable to send messages
   //shouldnt be a thrown error because account might be in rooms other than the admin channel
   if (!(await client.userHasPowerLevelFor(mxid, roomId, "m.room.message", false))) { console.log( "Bot does not have adequate permissions to respond in " + roomId ); return }
