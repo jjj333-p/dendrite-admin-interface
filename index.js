@@ -105,29 +105,24 @@ Makes an internal request to the global `homeserver` address following standard 
 async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
   //base url guaranteed to always be there
-  let url = "http://localhost" + "8008" + "/_dendrite/admin/" + command + "/" + arg1
+  let url = "http://localhost:" + port + "/_dendrite/admin/" + command + "/" + arg1
 
   //if there is a second argument add it 
   if (arg2) url += ("/" + arg2)
-
-  //add the token
-  url += ("?access_token=" + accessToken)
 
   //if body is supplied, stringify it to send in http request
   let bodyStr = null
   if (body) bodyStr = JSON.stringify(body)
 
   //make the request and return whatever the promise resolves to
-
   let response = await fetch(url, {
       method: reqType,
       headers: {
-        // "Authorization": "Bearer " + accessToken,
-        // "Content-Type": "application/json"
+        "Authorization": "Bearer " + accessToken,
+        "Content-Type": "application/json"
       },
       body:bodyStr
     })
-  
   return (await response.text())
 }
 
