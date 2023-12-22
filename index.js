@@ -114,16 +114,16 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
   if (body) bodyStr = JSON.stringify(body)
 
   //make the request and return whatever the promise resolves to
-  return (
-    (await fetch(url, {
+
+  let response = (await fetch(url, {
       method: reqType,
       headers: {
         "Authorization": "Bearer " + accessToken,
         "Content-Type": "application/json"
       },
       body:bodyStr
-    })).json()
-  )
+    }))
+  
 
 }
 
