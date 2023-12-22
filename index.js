@@ -124,6 +124,7 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
       body:bodyStr
     }))
   
+  console.log(response)
 
 }
 
