@@ -110,7 +110,7 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
   if (arg2) url += ("/" + arg2)
 
   //add the token
-  url += ("?access_token=" + accessToken)
+  // url += ("?access_token=" + accessToken)
 
   //if body is supplied, stringify it to send in http request
   let bodyStr = null
@@ -121,7 +121,7 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
   let response = (await fetch(url, {
       method: reqType,
       headers: {
-        // "Authorization": "Bearer " + accessToken,
+        "Authorization": "Bearer " + accessToken,
         // "Content-Type": "application/json"
       },
       body:bodyStr
