@@ -104,7 +104,7 @@ Makes an internal request to the global `homeserver` address following standard 
 async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
   //base url guaranteed to always be there
-  let url = homeserver + "/_dendrite/admin/" + command + "/" + arg1
+  let url = /*homeserver +*/ "localhost:8080/_dendrite/admin/" + command + "/" + arg1
 
   //if there is a second argument add it 
   if (arg2) url += ("/" + arg2)
@@ -124,7 +124,7 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
       body:bodyStr
     }))
   
-  console.log(response)
+  let a = await response.text()
 
 }
 
