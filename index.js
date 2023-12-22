@@ -105,6 +105,7 @@ Makes an internal request to the global `homeserver` address following standard 
 async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
   //base url guaranteed to always be there
+  //Dendrite only accepts requests from localhost
   let url = "http://localhost:" + port + "/_dendrite/admin/" + command + "/" + arg1
 
   //if there is a second argument add it 
