@@ -7,7 +7,9 @@ Feel free to make a issue for each requested feature so when I finally get time 
 
 Currently implemented commands:
 
-- `evacuate <room ID | Alias>` - runs the evacuate room endpoint on that roomID or Alias
+- `evacuate <room ID | Alias> ?<--preserve | -p>` 
+    
+    Runs the [evacuate room endpoint](https://matrix-org.github.io/dendrite/administration/adminapi#post-_dendriteadminevacuateroomroomid) on that roomID or Alias. If the `--preserve` or `-p` flag is **not** provided the [purge room endpoint](https://matrix-org.github.io/dendrite/administration/adminapi#post-_dendriteadminpurgeroomroomid) will also be run, purging the room state from the database.
 
 Space: [#admin-interface:pain.agency](https://matrix.to/#/#admin-interface:pain.agency)
 Discussion Room: [#admin-interface-support:pain.agency](https://matrix.to/#/%23admin-interface-support%3Apain.agency)
