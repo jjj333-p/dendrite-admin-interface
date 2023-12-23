@@ -129,7 +129,9 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
 async function evacuateUser(mxid){
 
-
+  makeDendriteReq("POST", "evacuateUser", mxid)
+    .then(e => client.sendHtmlNotice(adminRoom, ("Ran evacuateUser endpoint on <code>"+ mxid + "</code> with response <pre><code>" + e + "</code></pre>")) )
+    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make evacuateUser request with error\n<pre><code>" + e + "</code></pre>")) )
 
 }
 
