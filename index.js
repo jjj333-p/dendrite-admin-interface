@@ -133,18 +133,39 @@ async function evacuateUser(mxid){
 
 }
 
+async function purgeRoom(roomId){
+
+  //run purgeroom endpoint
+  makeDendriteReq("POST", "purgeRoom", roomId)
+    .then(e => client.sendHtmlNotice(adminRoom, ("Ran purgeRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>")) )
+    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make purgeRoom request with error\n<pre><code>" + e + "</code></pre>")) )
+
+}
+
 //run dendrite admin endpoint to evacuate all users from `roomId`
-async function evacuateRoom(roomId){
+async function evacuateRoom(roomId, preserve){
   makeDendriteReq("POST", "evacuateRoom", roomId,)
-    .then(e => client.sendHtmlNotice(adminRoom, ("Ran evacuateRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>")) )
-    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make request with error\n<pre><code>" + e + "</code></pre>")) )
+
+    //if the request is successful
+    .then(e => {
+
+      client.sendHtmlNotice(adminRoom, ("Ran evacuateRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>"))
+
+      //if preserve flag not provided, proceed to purgeRoom
+      if (!preserve) purgeRoom(roomId);
+
+    })
+
+    //catch errors from the evacuateRoom request
+    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make evacuateRoom request with error\n<pre><code>" + e + "</code></pre>")) )
+    
 }
 
 //resolves roomAlias to roomId, and runs evacuateRoom(roomId)
-function evacuateRoomAlias(roomAlias) {
+function evacuateRoomAlias(roomAlias, preserve) {
 
   client.resolveRoom(roomAlias)
-    .then(evacuateRoom)
+    .then(r => evacuateRoom(r, preserve))
     .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | Ran into the following error resolving that roomID:\n<pre><code>" + e + "</code></pre>")) )
 
 }
@@ -166,6 +187,9 @@ commandHandlers.set("evacuate", ({contentByWords}) => {
 
   }
 
+  //check for preservation flag
+  let preserve = ((contentByWords[2] == "--preserve") || ((contentByWords[2] == "-p"))) 
+
   //first character will tell us what type of id it is
   switch (contentByWords[1][0]) {
 
@@ -176,12 +200,12 @@ commandHandlers.set("evacuate", ({contentByWords}) => {
 
     //roomID
     case "!":
-      evacuateRoom(contentByWords[1])
+      evacuateRoom(contentByWords[1], preserve)
       break;
 
     //room alias
     case "#":
-      evacuateRoomAlias(contentByWords[1])
+      evacuateRoomAlias(contentByWords[1], preserve)
       break;
 
     //none of the above
