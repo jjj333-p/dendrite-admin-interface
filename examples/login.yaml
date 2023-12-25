@@ -32,3 +32,9 @@ prefix: '.'
 # Users listed here will be invited and given PL100 when the bot creates a new Administration room
 authorized-users:
   - '@bob:example.org'
+
+
+# Location of dendrite.yaml
+# the interface steals database information from the dendrite.yaml configuration file to work
+# make sure whatever user is running the interface has permissions to open the dendrite.yaml file
+dendriteyaml: '/opt/dendrite/dendrite.yaml'
