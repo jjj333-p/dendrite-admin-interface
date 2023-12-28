@@ -1,7 +1,8 @@
 //Import dependencies
-import { AutojoinRoomsMixin, MatrixClient, SimpleFsStorageProvider } from "matrix-bot-sdk"; 
-import fs from "fs";
+import mbs  from "matrix-bot-sdk"; 
+import fs   from "fs";
 import yaml from "js-yaml";
+import pg   from "pg";
 
 //Parse YAML configuration file
 let   loginFile       = fs.readFileSync('./db/login.yaml', 'utf8');
@@ -12,7 +13,7 @@ const accessToken     = loginParsed["login-token"];
 let   adminRoom       = loginParsed["administration-room"];
 const prefix          = loginParsed["prefix"]
 const authorizedUsers = loginParsed["authorized-users"];
-const dendriteyaml    = loginParsed["dendriteyaml"]
+const dendriteyaml    = loginParsed["dendriteyaml"];
 
 //if the interface config does not supply a path
 if (!dendriteyaml){
@@ -34,7 +35,7 @@ try{
   var dendriteconfig = yaml.load(dendriteyamlcfg);
 } catch (e) {
   console.log(e)
-  console.log("Unable to parce file " + dendriteyaml + ", is this a yaml file")
+  console.log("Unable to parce file " + dendriteyaml + ", is this a yaml file?")
   process.exit(1)
 }
 
@@ -44,12 +45,27 @@ if(!dendriteconfig["global"]){
   process.exit(1)
 }
 
+//is there even database information there?
+if(!dendriteconfig["global"]["database"]){
+  console.log("Unable to find database connection information in global config block of dendrite config.")
+  process.exit(1)
+}
+
+//is there even database information there?
+if(!dendriteconfig["global"]["database"]){
+  console.log("Unable to find database connection information in global config block of dendrite config.")
+  process.exit(1)
+}
+
+let pgClient = new pg.Client(dendriteconfig["global"]["database"]["connection_string"])
+
+pgClient.connect()
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
-const storage = new SimpleFsStorageProvider("bot.json");
+const storage = new mbs.SimpleFsStorageProvider("bot.json");
 
 //login to client
-const client = new MatrixClient(homeserver, accessToken, storage);
+const client = new mbs.MatrixClient(homeserver, accessToken, storage);
 
 //preallocate variables so they have a global scope
 let mxid; 
