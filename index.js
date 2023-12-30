@@ -57,8 +57,8 @@ if(!dendriteconfig["global"]["database"]){
   process.exit(1)
 }
 
+//create and start the postgres client
 let pgClient = new pg.Client(dendriteconfig["global"]["database"]["connection_string"])
-
 pgClient.connect()
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
