@@ -126,16 +126,27 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
   let bodyStr = null
   if (body) bodyStr = JSON.stringify(body)
 
-  //make the request and return whatever the promise resolves to
-  let response = await fetch(url, {
-      method: reqType,
-      headers: {
-        "Authorization": "Bearer " + accessToken,
-        "Content-Type": "application/json"
-      },
-      body:bodyStr
-    })
-  return (await response.text())
+  try {
+
+    //make the request and return whatever the promise resolves to
+    let response = await fetch(url, {
+        method: reqType,
+        headers: {
+          "Authorization": "Bearer " + accessToken,
+          "Content-Type": "application/json"
+        },
+        body:bodyStr
+      })
+    var r = await response.text()
+
+  //.catch
+  } catch (e) {
+    client.sendHtmlNotice(adminRoom, ("❌ | could not make <code>"+ url + "</code> request with error\n<pre><code>" + e + "</code></pre>")) 
+  }
+
+  //.then
+  client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + r + "</code></pre>"))
+
 }
 
 async function resetUserPwd (localpart, password, logout){
@@ -152,39 +163,20 @@ async function resetUserPwd (localpart, password, logout){
 }
 
 async function evacuateUser(mxid){
-
   makeDendriteReq("POST", "evacuateUser", mxid)
-    .then(e => client.sendHtmlNotice(adminRoom, ("Ran evacuateUser endpoint on <code>"+ mxid + "</code> with response <pre><code>" + e + "</code></pre>")) )
-    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make evacuateUser request with error\n<pre><code>" + e + "</code></pre>")) )
-
 }
 
 async function purgeRoom(roomId){
-
-  //run purgeroom endpoint
   makeDendriteReq("POST", "purgeRoom", roomId)
-    .then(e => client.sendHtmlNotice(adminRoom, ("Ran purgeRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>")) )
-    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make purgeRoom request with error\n<pre><code>" + e + "</code></pre>")) )
-
 }
 
 //run dendrite admin endpoint to evacuate all users from `roomId`
 async function evacuateRoom(roomId, preserve){
   makeDendriteReq("POST", "evacuateRoom", roomId,)
-
-    //if the request is successful
     .then(e => {
-
-      client.sendHtmlNotice(adminRoom, ("Ran evacuateRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>"))
-
       //if preserve flag not provided, proceed to purgeRoom
       if (!preserve) purgeRoom(roomId);
-
-    })
-
-    //catch errors from the evacuateRoom request
-    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make evacuateRoom request with error\n<pre><code>" + e + "</code></pre>")) )
-    
+    })  
 }
 
 //resolves roomAlias to roomId, and runs evacuateRoom(roomId)
