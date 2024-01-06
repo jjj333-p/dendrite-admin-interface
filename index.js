@@ -235,6 +235,43 @@ commandHandlers.set("evacuate", ({contentByWords}) => {
 
 })
 
+commandHandlers.set("passwd", async ({contentByWords, event}) => {
+
+  //first argument provided
+  let user = contentByWords[1]
+  if(!user) {
+
+    client.sendHtmlNotice(adminRoom, ("❌ | no user indicated."))
+
+    return;
+  }
+
+  //remove the @ no matter if its a mxid or localpart
+  //user may mistakenly provide @localpart or localpart:server.tld and that is okay
+  if(user.startsWith('@')) user = user.substring(1)
+
+  //decides if its a mxid or localpart
+  if(!user.includes(":")){
+
+    //if its not a local user we cant do anything
+    if(!user.endsWith(":" + server)){
+
+      client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[1] + "</code> does not appear to be a valid user ID."))
+
+      return;
+    }
+
+    let localpart = user.split(":")[0]
+
+    resetUserPwd(localpart)
+
+    //todo write flags
+
+    return;
+  }
+
+})
+
 //data structure to hold various handlers
 let eventHandlers = new Map()
 
