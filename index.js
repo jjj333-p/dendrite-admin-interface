@@ -2,6 +2,7 @@
 import { AutojoinRoomsMixin, MatrixClient, SimpleFsStorageProvider } from "matrix-bot-sdk"; 
 import fs from "fs";
 import yaml from "js-yaml";
+import crypto from 'crypto';
 
 //Parse YAML configuration file
 let   loginFile       = fs.readFileSync('./db/login.yaml', 'utf8');
@@ -21,6 +22,12 @@ const client = new MatrixClient(homeserver, accessToken, storage);
 
 //preallocate variables so they have a global scope
 let mxid; 
+let server;
+
+//for temporary passord generation
+function generateSecureOneTimeCode(length) {
+  return crypto.randomBytes(length).toString('base64');
+}
 
 //Start Client
 client.start().then( async () => {
@@ -29,6 +36,7 @@ client.start().then( async () => {
 
   //get mxid
   mxid = await client.getUserId()
+  server = mxid.split(":")[1]
 
   //create pl feild for each authorized user
   let authorizedPL = {[mxid]:101}
@@ -106,7 +114,10 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
   //base url guaranteed to always be there
   //Dendrite only accepts requests from localhost
-  let url = "http://localhost:" + port + "/_dendrite/admin/" + command + "/" + arg1
+  let url = "http://localhost:" + port + "/_dendrite/admin/" + command 
+
+  //if there is a first argument add it 
+  if (arg1) url += ("/" + arg1)
 
   //if there is a second argument add it 
   if (arg2) url += ("/" + arg2)
@@ -125,6 +136,19 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
       body:bodyStr
     })
   return (await response.text())
+}
+
+async function resetUserPwd (localpart, password, logout){
+
+  let userMxid = "@" + localpart + ":" + server
+
+  makeDendriteReq("resetPassword", mxid, null, null, {
+    password:password,
+    logout_devices:logout
+  })
+
+  //should move then and catch into makeDendriteReq
+
 }
 
 async function evacuateUser(mxid){
