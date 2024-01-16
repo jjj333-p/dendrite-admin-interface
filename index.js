@@ -1,3 +1,7 @@
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 //Import dependencies
 import { AutojoinRoomsMixin, MatrixClient, SimpleFsStorageProvider } from "matrix-bot-sdk"; 
 import fs from "fs";
@@ -14,6 +18,8 @@ let   adminRoom       = loginParsed["administration-room"];
 const prefix          = loginParsed["prefix"]
 const authorizedUsers = loginParsed["authorized-users"];
 const dendriteyaml    = loginParsed["dendriteyaml"]
+const deactivatedpfp  = loginParsed["deactivatedpfp"]
+const deactivateddn   = loginParsed["deactivateddn"]
 
 //if the interface config does not supply a path
 if (!dendriteyaml){
@@ -44,7 +50,6 @@ if(!dendriteconfig["global"]){
   console.log("No global block found in the dendrite configuration file. Is this a dendrite configuration file?")
   process.exit(1)
 }
-
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
 const storage = new SimpleFsStorageProvider("bot.json");
@@ -179,6 +184,65 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
   //.then
   client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + r + "</code></pre>"))
 
+}
+
+async function makeUserReq (reqType, command, arg1, arg2, userToken, body, ) {
+
+  //base url guaranteed to always be there
+  //Dendrite only accepts requests from localhost
+  let url = "http://localhost:" + port + "/_matrix/client/v3/" + command 
+
+  //if there is a first argument add it 
+  if (arg1) url += ("/" + arg1)
+
+  //if there is a second argument add it 
+  if (arg2) url += ("/" + arg2)
+
+  //if body is supplied, stringify it to send in http request
+  let bodyStr = null
+  if (body) bodyStr = JSON.stringify(body)
+
+  try {
+
+    //make the request and return whatever the promise resolves to
+    var response = await (await fetch(url, {
+        method: reqType,
+        headers: {
+          "Authorization": "Bearer " + userToken,
+          "Content-Type": "application/json"
+        },
+        body:bodyStr
+      })).json()
+
+  //.catch
+  } catch (e) {
+    client.sendHtmlNotice(adminRoom, ("❌ | could not make <code>"+ url + "</code> request with error\n<pre><code>" + e + "</code></pre>")) 
+  }
+
+  //.then
+  client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + JSON.stringify(response) + "</code></pre>"))
+
+  return response
+
+}
+
+async function resetUserPwd (localpart, password, logout){
+
+  let userMxid = "@" + localpart + ":" + server
+
+  if (!password) password = generateSecureOneTimeCode(35)
+
+  makeDendriteReq("POST", "resetPassword", userMxid, null, {
+    password:password,
+    logout_devices:logout
+  })
+
+  return (password)
+
+}
+
+async function evacuateUser(mxid){
+  makeDendriteReq("POST", "evacuateUser", mxid)
 }
 
 async function resetUserPwd (localpart, password, logout){
@@ -333,6 +397,83 @@ commandHandlers.set("passwd", async ({contentByWords, event}) => {
 
 
     // resetUserPwd(localpart)
+
+})
+
+commandHandlers.set("deactivate", async ({contentByWords, event}) => {
+
+  //first argument provided
+  let user = contentByWords[1]
+  if(!user) {
+
+    client.sendHtmlNotice(adminRoom, ("❌ | no user indicated."))
+
+    return;
+  }
+
+  //remove the @ no matter if its a mxid or localpart
+  //user may mistakenly provide @localpart or localpart:server.tld and that is okay
+  // .substring(1) just removes the first char
+  if(user.startsWith('@')) user = user.substring(1)
+
+  //decides if its a mxid or localpart
+  if(user.includes(":")){
+
+    //if its not a local user we cant do anything
+    if(!user.endsWith(":" + server)){
+
+      client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[1] + "</code> does not appear to be a valid user ID."))
+
+      return;
+    }
+
+    //we want only the localpart
+    //while there are normal restrictions on user account chars, @ and : are the only characters that truly cannot be allowed
+    //it is possible for admins to modify dendrite to remove those restrictions, and this interface need not restrict to that needlessly
+    user = user.split(":")[0]
+
+  } 
+
+  //reset the password as to lock out the user
+  let newpwd = await resetUserPwd(user, null, true)
+
+  //idk some race conditions, this makes it work more reliably so sure
+  await delay(1000)
+
+  //make login request
+  let response = await makeUserReq("POST", "login", null, null, null, {
+    "type": "m.login.password",
+    "identifier": {
+        "type": "m.id.user",
+        "user": user,
+    },
+    "password": newpwd,
+  })
+
+  let userToken = response["access_token"]
+
+  //no token means no successful login
+  if (!userToken) {
+    
+    client.sendNotice(adminRoom, "❌ | unable to log in. This may just be a momentary error.")
+
+    return;
+  }
+
+  let userMxid = "@" + user + ":" + server
+
+  //sanatize pfp and displayname
+  await makeUserReq("PUT", "profile", userMxid, "avatar_url", userToken, {"avatar_url":deactivatedpfp})
+  await makeUserReq("PUT", "profile", userMxid, "displayname", userToken, {"displayname":deactivateddn})
+
+  //deactivate the account
+  await makeUserReq("POST", "account", "deactivate", null, userToken, {
+    "auth": {
+        "type": "m.login.password",
+        "user": user,
+        "password": newpwd,
+    },
+  })
 
 })
 

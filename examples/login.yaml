@@ -33,6 +33,15 @@ prefix: '.'
 authorized-users:
   - '@bob:example.org'
 
+# Deactivated user PFP
+# This is the profile image (in mxc:// format) that will be set to user profiles before deactivation. if left blank it will simply be removed
+# Recommended is blank or `mxc://matrix.org/LaVsSRIBaLkOwvehbwDxEDio`
+deactivatedpfp: ''
+
+# Deactivated user DisplayName
+# Display name to set to any deactivated user. Unsure what will happen if left blank.
+# Recommended is `Deactivated User`
+deactivateddn: 'Deactivated User'
 
 # Location of dendrite.yaml
 # the interface steals database information from the dendrite.yaml configuration file to work
