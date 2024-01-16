@@ -254,7 +254,7 @@ commandHandlers.set("passwd", async ({contentByWords, event}) => {
   if(user.startsWith('@')) user = user.substring(1)
 
   //decides if its a mxid or localpart
-  if(!user.includes(":")){
+  if(user.includes(":")){
 
     //if its not a local user we cant do anything
     if(!user.endsWith(":" + server)){
