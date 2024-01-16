@@ -21,5 +21,12 @@ Currently implemented commands:
         - `f` or `false` to keep all sessions logged in.
     - `? password` - optionally set a password to reset to. If no password is supplied, it will default to a randomized 35 byte base64 string which will be returned. Because of Dendrite the password has to be at least 8 characters. Due to technical difficulties you can not have any spaces in a password set through this interface.
 
+- `deactivate <mxid/localpart>`
+
+    deactivates the given user
+    > **TODO:** Add confirmation prompt
+    - `mxid/localpart` - you can supply either the localpart of a user (i.e. `jjj333`), or the entire mxid (i.e. `@jjj333:pain.agency`). Do note that this has to be a local user as there is nothing that can be done for remote users.
+    - Sets the displayname and pfp to those defined in the bot login.yaml as dendrite doesnt remove these before deactivating, therefore we need to sanatize, and we can add flair to it in the meantime.
+
 Space: [#admin-interface:pain.agency](https://matrix.to/#/#admin-interface:pain.agency)
 Discussion Room: [#admin-interface-support:pain.agency](https://matrix.to/#/%23admin-interface-support%3Apain.agency)
