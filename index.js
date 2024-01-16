@@ -245,25 +245,6 @@ async function evacuateUser(mxid){
   makeDendriteReq("POST", "evacuateUser", mxid)
 }
 
-async function resetUserPwd (localpart, password, logout){
-
-  let userMxid = "@" + localpart + ":" + server
-
-  if (!password) password = generateSecureOneTimeCode(35)
-
-  makeDendriteReq("POST", "resetPassword", userMxid, null, {
-    password:password,
-    logout_devices:logout
-  })
-
-  return (password)
-
-}
-
-async function evacuateUser(mxid){
-  makeDendriteReq("POST", "evacuateUser", mxid)
-}
-
 async function purgeRoom(roomId){
   makeDendriteReq("POST", "purgeRoom", roomId)
 }
