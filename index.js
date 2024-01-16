@@ -3,6 +3,8 @@ import { AutojoinRoomsMixin, MatrixClient, SimpleFsStorageProvider } from "matri
 import fs from "fs";
 import yaml from "js-yaml";
 import crypto from 'crypto';
+import fetch from 'node-fetch';
+
 
 //Parse YAML configuration file
 let   loginFile       = fs.readFileSync('./db/login.yaml', 'utf8');
