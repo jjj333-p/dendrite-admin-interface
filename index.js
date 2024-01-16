@@ -345,7 +345,7 @@ commandHandlers.set("passwd", async ({contentByWords, event}) => {
 
 })
 
-commandHandlers.set("deactivate", ({contentByWords, event}) => {
+commandHandlers.set("deactivate", async ({contentByWords, event}) => {
 
   //first argument provided
   let user = contentByWords[1]
@@ -381,7 +381,7 @@ commandHandlers.set("deactivate", ({contentByWords, event}) => {
 
   let newpwd = resetUserPwd(user, null, true)
 
-  let response = makeUserReq("POST", "login", null, null, {
+  let response = await makeUserReq("POST", "login", null, null, {
     "type": "m.login.password",
     "identifier": {
         "type": "m.id.user",
