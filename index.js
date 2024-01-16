@@ -170,7 +170,7 @@ async function makeUserReq (reqType, command, arg1, arg2, body) {
   try {
 
     //make the request and return whatever the promise resolves to
-    let response = await fetch(url, {
+    var response = await fetch(url, {
         method: reqType,
         headers: {
           "Authorization": "Bearer " + accessToken,
@@ -188,7 +188,7 @@ async function makeUserReq (reqType, command, arg1, arg2, body) {
   //.then
   client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + r + "</code></pre>"))
 
-  return await r.json()
+  return await response.json()
 
 }
 
