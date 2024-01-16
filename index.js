@@ -186,7 +186,7 @@ async function makeUserReq (reqType, command, arg1, arg2, body) {
   //.then
   client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + r + "</code></pre>"))
 
-  return r
+  return await r.json()
 
 }
 
@@ -390,7 +390,7 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
     "password": newpwd,
   })
 
-  // console.log(JSON.stringify(r))
+  console.log(response["access_token"])
 
 })
 
