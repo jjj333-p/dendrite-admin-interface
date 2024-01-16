@@ -42,3 +42,8 @@ deactivatedpfp: ''
 # Display name to set to any deactivated user. Unsure what will happen if left blank.
 # Recommended is `Deactivated User`
 deactivateddn: 'Deactivated User'
+
+# Location of dendrite.yaml
+# the interface steals database information from the dendrite.yaml configuration file to work
+# make sure whatever user is running the interface has permissions to open the dendrite.yaml file
+dendriteyaml: '/opt/dendrite/dendrite.yaml'

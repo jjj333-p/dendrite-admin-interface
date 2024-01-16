@@ -12,13 +12,44 @@ import crypto from 'crypto';
 let   loginFile       = fs.readFileSync('./db/login.yaml', 'utf8');
 let   loginParsed     = yaml.load(loginFile);
 const homeserver      = loginParsed["homeserver-url"];
-const port            = loginParsed["port"]
+const port            = loginParsed["port"];
 const accessToken     = loginParsed["login-token"];
 let   adminRoom       = loginParsed["administration-room"];
 const prefix          = loginParsed["prefix"]
 const authorizedUsers = loginParsed["authorized-users"];
+const dendriteyaml    = loginParsed["dendriteyaml"]
 const deactivatedpfp  = loginParsed["deactivatedpfp"]
 const deactivateddn   = loginParsed["deactivateddn"]
+
+//if the interface config does not supply a path
+if (!dendriteyaml){
+  console.log("No path to dendrite configuration file found, this is necessary for the interface to run.")
+  process.exit(1)
+}
+
+//read in the file
+try{
+  var dendriteyamlcfg = fs.readFileSync(dendriteyaml, 'utf8');
+} catch (e) {
+  console.log(e)
+  console.log("Unable to read file " + dendriteyaml + ", was the correct path provided?")
+  process.exit(1)
+}
+
+//try to parce the file
+try{
+  var dendriteconfig = yaml.load(dendriteyamlcfg);
+} catch (e) {
+  console.log(e)
+  console.log("Unable to parce file " + dendriteyaml + ", is this a yaml file")
+  process.exit(1)
+}
+
+//an essential part of the dendrite configuration file
+if(!dendriteconfig["global"]){
+  console.log("No global block found in the dendrite configuration file. Is this a dendrite configuration file?")
+  process.exit(1)
+}
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
 const storage = new SimpleFsStorageProvider("bot.json");
@@ -193,6 +224,25 @@ async function makeUserReq (reqType, command, arg1, arg2, userToken, body, ) {
 
   return response
 
+}
+
+async function resetUserPwd (localpart, password, logout){
+
+  let userMxid = "@" + localpart + ":" + server
+
+  if (!password) password = generateSecureOneTimeCode(35)
+
+  makeDendriteReq("POST", "resetPassword", userMxid, null, {
+    password:password,
+    logout_devices:logout
+  })
+
+  return (password)
+
+}
+
+async function evacuateUser(mxid){
+  makeDendriteReq("POST", "evacuateUser", mxid)
 }
 
 async function resetUserPwd (localpart, password, logout){
