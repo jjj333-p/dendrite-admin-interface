@@ -7,10 +7,19 @@ Feel free to make a issue for each requested feature so when I finally get time 
 
 Currently implemented commands:
 
-- `evacuate <User MXID | Room ID | Room Alias> ?<--preserve | -p>` 
+- `evacuate User MXID | Room ID | Room Alias> ?<--preserve | -p>` 
     
     - When supplied a room ID or alias, the interface runs the [evacuate room endpoint](https://matrix-org.github.io/dendrite/administration/adminapi#post-_dendriteadminevacuateroomroomid) on that roomID or Alias, causing all users on this server to leave that room. If the `--preserve` or `-p` flag is **not** provided the [purge room endpoint](https://matrix-org.github.io/dendrite/administration/adminapi#post-_dendriteadminpurgeroomroomid) will also be run, purging the room state from the database.
     - When supplied with a MXID of a local user, i.e. `@localpart:your.server`, the interface will run the [evacuate user endpoint](https://matrix-org.github.io/dendrite/administration/adminapi#post-_dendriteadminevacuateuseruserid) on that user, making that account leave all rooms it is in.
+
+- `passwd <mxid/localpart> <log out accounts?> ?<password>`
+
+    Reset the password of a user    
+    - `mxid/localpart` - you can supply either the localpart of a user (i.e. `jjj333`), or the entire mxid (i.e. `@jjj333:pain.agency`). Do note that this has to be a local user as there is nothing that can be done for remote users.
+    - `log out accounts?` 
+        - `t` or `true` to log out all logged in sessions of the account.
+        - `f` or `false` to keep all sessions logged in.
+    - `? password` - optionally set a password to reset to. If no password is supplied, it will default to a randomized 35 byte base64 string which will be returned. Because of Dendrite the password has to be at least 8 characters. Due to technical difficulties you can not have any spaces in a password set through this interface.
 
 Space: [#admin-interface:pain.agency](https://matrix.to/#/#admin-interface:pain.agency)
 Discussion Room: [#admin-interface-support:pain.agency](https://matrix.to/#/%23admin-interface-support%3Apain.agency)
