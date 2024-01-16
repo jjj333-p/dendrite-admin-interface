@@ -2,6 +2,7 @@
 import { AutojoinRoomsMixin, MatrixClient, SimpleFsStorageProvider } from "matrix-bot-sdk"; 
 import fs from "fs";
 import yaml from "js-yaml";
+import crypto from 'crypto';
 
 //Parse YAML configuration file
 let   loginFile       = fs.readFileSync('./db/login.yaml', 'utf8');
@@ -21,6 +22,12 @@ const client = new MatrixClient(homeserver, accessToken, storage);
 
 //preallocate variables so they have a global scope
 let mxid; 
+let server;
+
+//for temporary passord generation
+function generateSecureOneTimeCode(length) {
+  return crypto.randomBytes(length).toString('base64');
+}
 
 //Start Client
 client.start().then( async () => {
@@ -29,6 +36,7 @@ client.start().then( async () => {
 
   //get mxid
   mxid = await client.getUserId()
+  server = mxid.split(":")[1]
 
   //create pl feild for each authorized user
   let authorizedPL = {[mxid]:101}
@@ -106,7 +114,10 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
   //base url guaranteed to always be there
   //Dendrite only accepts requests from localhost
-  let url = "http://localhost:" + port + "/_dendrite/admin/" + command + "/" + arg1
+  let url = "http://localhost:" + port + "/_dendrite/admin/" + command 
+
+  //if there is a first argument add it 
+  if (arg1) url += ("/" + arg1)
 
   //if there is a second argument add it 
   if (arg2) url += ("/" + arg2)
@@ -115,52 +126,59 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
   let bodyStr = null
   if (body) bodyStr = JSON.stringify(body)
 
-  //make the request and return whatever the promise resolves to
-  let response = await fetch(url, {
-      method: reqType,
-      headers: {
-        "Authorization": "Bearer " + accessToken,
-        "Content-Type": "application/json"
-      },
-      body:bodyStr
-    })
-  return (await response.text())
+  try {
+
+    //make the request and return whatever the promise resolves to
+    let response = await fetch(url, {
+        method: reqType,
+        headers: {
+          "Authorization": "Bearer " + accessToken,
+          "Content-Type": "application/json"
+        },
+        body:bodyStr
+      })
+    var r = await response.text()
+
+  //.catch
+  } catch (e) {
+    client.sendHtmlNotice(adminRoom, ("❌ | could not make <code>"+ url + "</code> request with error\n<pre><code>" + e + "</code></pre>")) 
+  }
+
+  //.then
+  client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + r + "</code></pre>"))
+
+}
+
+async function resetUserPwd (localpart, password, logout){
+
+  let userMxid = "@" + localpart + ":" + server
+
+  if (!password) password = generateSecureOneTimeCode(35)
+
+  makeDendriteReq("POST", "resetPassword", userMxid, null, {
+    password:password,
+    logout_devices:logout
+  })
+
+  return (password)
+
 }
 
 async function evacuateUser(mxid){
-
   makeDendriteReq("POST", "evacuateUser", mxid)
-    .then(e => client.sendHtmlNotice(adminRoom, ("Ran evacuateUser endpoint on <code>"+ mxid + "</code> with response <pre><code>" + e + "</code></pre>")) )
-    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make evacuateUser request with error\n<pre><code>" + e + "</code></pre>")) )
-
 }
 
 async function purgeRoom(roomId){
-
-  //run purgeroom endpoint
   makeDendriteReq("POST", "purgeRoom", roomId)
-    .then(e => client.sendHtmlNotice(adminRoom, ("Ran purgeRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>")) )
-    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make purgeRoom request with error\n<pre><code>" + e + "</code></pre>")) )
-
 }
 
 //run dendrite admin endpoint to evacuate all users from `roomId`
 async function evacuateRoom(roomId, preserve){
   makeDendriteReq("POST", "evacuateRoom", roomId,)
-
-    //if the request is successful
     .then(e => {
-
-      client.sendHtmlNotice(adminRoom, ("Ran evacuateRoom endpoint on <code>"+ roomId + "</code> with response <pre><code>" + e + "</code></pre>"))
-
       //if preserve flag not provided, proceed to purgeRoom
       if (!preserve) purgeRoom(roomId);
-
-    })
-
-    //catch errors from the evacuateRoom request
-    .catch(e => client.sendHtmlNotice(adminRoom, ("❌ | could not make evacuateRoom request with error\n<pre><code>" + e + "</code></pre>")) )
-    
+    })  
 }
 
 //resolves roomAlias to roomId, and runs evacuateRoom(roomId)
@@ -216,6 +234,73 @@ commandHandlers.set("evacuate", ({contentByWords}) => {
       break;
 
   }
+
+})
+
+commandHandlers.set("passwd", async ({contentByWords, event}) => {
+
+  //first argument provided
+  let user = contentByWords[1]
+  if(!user) {
+
+    client.sendHtmlNotice(adminRoom, ("❌ | no user indicated."))
+
+    return;
+  }
+
+  //remove the @ no matter if its a mxid or localpart
+  //user may mistakenly provide @localpart or localpart:server.tld and that is okay
+  // .substring(1) just removes the first char
+  if(user.startsWith('@')) user = user.substring(1)
+
+  //decides if its a mxid or localpart
+  if(user.includes(":")){
+
+    //if its not a local user we cant do anything
+    if(!user.endsWith(":" + server)){
+
+      client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[1] + "</code> does not appear to be a valid user ID."))
+
+      return;
+    }
+
+    //we want only the localpart
+    //while there are normal restrictions on user account chars, @ and : are the only characters that truly cannot be allowed
+    //it is possible for admins to modify dendrite to remove those restrictions, and this interface need not restrict to that needlessly
+    user = user.split(":")[0]
+
+  } 
+
+  //second argument is boolean of whether currently logged in devices should be logged out
+  // `t` or `true` will result in a positive input
+  if(contentByWords[2] == "true" || contentByWords[2] == "t"){
+
+    var logout = true
+
+  // `f` or `false` will result in a negative input
+  } else if (contentByWords[2] == "false" || contentByWords[2] == "f"){
+
+    var logout = false
+
+  //if its neither of the above we cannot proceed as we need to know that information
+  } else {
+
+    client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[2] + "</code> not values <b>T</b>rue or <b>F</b>alse, unsure if logging out devices is desired."))
+
+    return;
+
+  }
+
+  //third argument is password
+  let passwd = contentByWords[3]
+
+  let setpasswd = await resetUserPwd(user, passwd, logout)
+
+  client.sendHtmlNotice(adminRoom, ("(Attempted to) reset password of user <code>" + user + "</code> to <code>" + setpasswd + "</code>"))
+
+
+
+    // resetUserPwd(localpart)
 
 })
 
