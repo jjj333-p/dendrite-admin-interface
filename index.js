@@ -155,7 +155,7 @@ async function resetUserPwd (localpart, password, logout){
 
   if (!password) password = generateSecureOneTimeCode(35)
 
-  makeDendriteReq("resetPassword", mxid, null, null, {
+  makeDendriteReq("resetPassword", userMxid, null, null, {
     password:password,
     logout_devices:logout
   })
