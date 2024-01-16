@@ -17,6 +17,8 @@ const accessToken     = loginParsed["login-token"];
 let   adminRoom       = loginParsed["administration-room"];
 const prefix          = loginParsed["prefix"]
 const authorizedUsers = loginParsed["authorized-users"];
+const deactivatedpfp  = loginParsed["deactivatedpfp"]
+const deactivateddn   = loginParsed["deactivateddn"]
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
 const storage = new SimpleFsStorageProvider("bot.json");
@@ -153,7 +155,7 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
 }
 
-async function makeUserReq (reqType, command, arg1, arg2, body) {
+async function makeUserReq (reqType, command, arg1, arg2, userToken, body, ) {
 
   //base url guaranteed to always be there
   //Dendrite only accepts requests from localhost
@@ -175,7 +177,7 @@ async function makeUserReq (reqType, command, arg1, arg2, body) {
     var response = await (await fetch(url, {
         method: reqType,
         headers: {
-          "Authorization": "Bearer " + accessToken,
+          "Authorization": "Bearer " + userToken,
           "Content-Type": "application/json"
         },
         body:bodyStr
@@ -382,13 +384,14 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
 
   } 
 
+  //reset the password as to lock out the user
   let newpwd = await resetUserPwd(user, null, true)
 
-  console.log("pass: " + newpwd)
-
+  //idk some race conditions, this makes it work more reliably so sure
   await delay(1000)
 
-  let response = await makeUserReq("POST", "login", null, null, {
+  //make login request
+  let response = await makeUserReq("POST", "login", null, null, null, {
     "type": "m.login.password",
     "identifier": {
         "type": "m.id.user",
@@ -397,7 +400,21 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
     "password": newpwd,
   })
 
-  console.log("token: " + response["access_token"])
+  let userToken = response["access_token"]
+
+  //no token means no successful login
+  if (!userToken) {
+    
+    client.sendNotice(adminRoom, "❌ | unable to log in. This may just be a momentary error.")
+
+    return;
+  }
+
+  let userMxid = "@" + localpart + ":" + server
+
+  await makeUserReq("PUT", "profile", userMxid, "avatar_url", userToken, {"avatar_url":deactivatedpfp})
+  await makeUserReq("PUT", "profile", userMxid, "displayname", userToken, {"avatar_url":deactivatedpfp})
+
 
 })
 
