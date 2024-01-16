@@ -390,7 +390,7 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
     "password": newpwd,
   })
 
-  console.log(JSON.stringify(r))
+  // console.log(JSON.stringify(r))
 
 })
 
