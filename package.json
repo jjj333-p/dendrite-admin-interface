@@ -24,8 +24,7 @@
   "homepage": "https://github.com/jjj333-p/dendrite-admin-interface#readme",
   "dependencies": {
     "js-yaml": "^4.1.0",
-    "matrix-bot-sdk": "^0.7.0",
-    "node-fetch": "^3.3.2"
+    "matrix-bot-sdk": "^0.7.0"
   },
   "type": "module"
 }
