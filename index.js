@@ -412,9 +412,18 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
 
   let userMxid = "@" + user + ":" + server
 
+  //sanatize pfp and displayname
   await makeUserReq("PUT", "profile", userMxid, "avatar_url", userToken, {"avatar_url":deactivatedpfp})
   await makeUserReq("PUT", "profile", userMxid, "displayname", userToken, {"displayname":deactivateddn})
 
+  //deactivate the account
+  await makeUserReq("POST", "account", "deactivate", null, userToken, {
+    "auth": {
+        "type": "m.login.password",
+        "user": user,
+        "password": newpwd,
+    },
+  })
 
 })
 
