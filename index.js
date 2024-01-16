@@ -1,3 +1,7 @@
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 //Import dependencies
 import { AutojoinRoomsMixin, MatrixClient, SimpleFsStorageProvider } from "matrix-bot-sdk"; 
 import fs from "fs";
@@ -381,6 +385,8 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
   let newpwd = await resetUserPwd(user, null, true)
 
   console.log("pass: " + newpwd)
+
+  await delay(1000)
 
   let response = await makeUserReq("POST", "login", null, null, {
     "type": "m.login.password",
