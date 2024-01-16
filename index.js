@@ -153,12 +153,14 @@ async function resetUserPwd (localpart, password, logout){
 
   let userMxid = "@" + localpart + ":" + server
 
+  if (!password) password = generateSecureOneTimeCode(35)
+
   makeDendriteReq("resetPassword", mxid, null, null, {
     password:password,
     logout_devices:logout
   })
 
-  //should move then and catch into makeDendriteReq
+  return (password)
 
 }
 
@@ -248,6 +250,7 @@ commandHandlers.set("passwd", async ({contentByWords, event}) => {
 
   //remove the @ no matter if its a mxid or localpart
   //user may mistakenly provide @localpart or localpart:server.tld and that is okay
+  // .substring(1) just removes the first char
   if(user.startsWith('@')) user = user.substring(1)
 
   //decides if its a mxid or localpart
@@ -261,14 +264,43 @@ commandHandlers.set("passwd", async ({contentByWords, event}) => {
       return;
     }
 
-    let localpart = user.split(":")[0]
+    //we want only the localpart
+    //while there are normal restrictions on user account chars, @ and : are the only characters that truly cannot be allowed
+    //it is possible for admins to modify dendrite to remove those restrictions, and this interface need not restrict to that needlessly
+    user = user.split(":")[0]
 
-    resetUserPwd(localpart)
+  } 
 
-    //todo write flags
+  //second argument is boolean of whether currently logged in devices should be logged out
+  // `t` or `true` will result in a positive input
+  if(contentByWords[2] == "true" || contentByWords[2] == "t"){
+
+    var logout = true
+
+  // `f` or `false` will result in a negative input
+  } else if (contentByWords[2] == "false" || contentByWords[2] == "f"){
+
+    var logout = false
+
+  //if its neither of the above we cannot proceed as we need to know that information
+  } else {
+
+    client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[2] + "</code> not values <b>T</b>rue or <b>F</b>alse, unsure if logging out devices is desired."))
 
     return;
+
   }
+
+  //third argument is password
+  let passwd = contentByWords[3]
+
+  let setpasswd = await resetUserPwd(user, passwd, logout)
+
+  client.sendHtmlNotice(adminRoom, ("(Attempted to) reset password of user <code>" + user + "</code> to <code>" + setpasswd + "</code>"))
+
+
+
+    // resetUserPwd(localpart)
 
 })
 
