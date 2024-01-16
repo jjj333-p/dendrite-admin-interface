@@ -5,6 +5,9 @@ This project is in it's very baby stages. Contributions are very welcome however
 
 Feel free to make a issue for each requested feature so when I finally get time I have a list to go through and check off.
 
+You're gonna want to clone or whatever else the code dir, run `npm install``, copy examples/login.yaml to db/login.yaml and fill it out (instructions inside) and then you should be able to run it
+(better instructions to come eventually lmao)
+
 Currently implemented commands:
 
 - `evacuate User MXID | Room ID | Room Alias> ?<--preserve | -p>` 
