@@ -149,6 +149,47 @@ async function makeDendriteReq (reqType, command, arg1, arg2, body) {
 
 }
 
+async function makeUserReq (reqType, command, arg1, arg2, body) {
+
+  //base url guaranteed to always be there
+  //Dendrite only accepts requests from localhost
+  let url = "http://localhost:" + port + "/_matrix/client/v3/" + command 
+
+  //if there is a first argument add it 
+  if (arg1) url += ("/" + arg1)
+
+  //if there is a second argument add it 
+  if (arg2) url += ("/" + arg2)
+
+  //if body is supplied, stringify it to send in http request
+  let bodyStr = null
+  if (body) bodyStr = JSON.stringify(body)
+
+  try {
+
+    //make the request and return whatever the promise resolves to
+    let response = await fetch(url, {
+        method: reqType,
+        headers: {
+          "Authorization": "Bearer " + accessToken,
+          "Content-Type": "application/json"
+        },
+        body:bodyStr
+      })
+    var r = await response.text()
+
+  //.catch
+  } catch (e) {
+    client.sendHtmlNotice(adminRoom, ("❌ | could not make <code>"+ url + "</code> request with error\n<pre><code>" + e + "</code></pre>")) 
+  }
+
+  //.then
+  client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + r + "</code></pre>"))
+
+  return r
+
+}
+
 async function resetUserPwd (localpart, password, logout){
 
   let userMxid = "@" + localpart + ":" + server
@@ -301,6 +342,55 @@ commandHandlers.set("passwd", async ({contentByWords, event}) => {
 
 
     // resetUserPwd(localpart)
+
+})
+
+commandHandlers.set("deactivate", ({contentByWords, event}) => {
+
+  //first argument provided
+  let user = contentByWords[1]
+  if(!user) {
+
+    client.sendHtmlNotice(adminRoom, ("❌ | no user indicated."))
+
+    return;
+  }
+
+  //remove the @ no matter if its a mxid or localpart
+  //user may mistakenly provide @localpart or localpart:server.tld and that is okay
+  // .substring(1) just removes the first char
+  if(user.startsWith('@')) user = user.substring(1)
+
+  //decides if its a mxid or localpart
+  if(user.includes(":")){
+
+    //if its not a local user we cant do anything
+    if(!user.endsWith(":" + server)){
+
+      client.sendHtmlNotice(adminRoom, ("❌ | <code>" + contentByWords[1] + "</code> does not appear to be a valid user ID."))
+
+      return;
+    }
+
+    //we want only the localpart
+    //while there are normal restrictions on user account chars, @ and : are the only characters that truly cannot be allowed
+    //it is possible for admins to modify dendrite to remove those restrictions, and this interface need not restrict to that needlessly
+    user = user.split(":")[0]
+
+  } 
+
+  let newpwd = resetUserPwd(user, null, true)
+
+  let response = makeUserReq("POST", "login", null, null, {
+    "type": "m.login.password",
+    "identifier": {
+        "type": "m.id.user",
+        "user": user,
+    },
+    "password": newpwd,
+  })
+
+  console.log(JSON.stringify(r))
 
 })
 
