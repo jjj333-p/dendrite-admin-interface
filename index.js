@@ -380,7 +380,7 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
 
   let newpwd = await resetUserPwd(user, null, true)
 
-  console.log(newpwd)
+  console.log("pass: " + newpwd)
 
   let response = await makeUserReq("POST", "login", null, null, {
     "type": "m.login.password",
@@ -391,7 +391,7 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
     "password": newpwd,
   })
 
-  console.log(response["access_token"])
+  console.log("token: " + response["access_token"])
 
 })
 
