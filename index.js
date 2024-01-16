@@ -375,10 +375,6 @@ commandHandlers.set("passwd", async ({contentByWords, event}) => {
 
   client.sendHtmlNotice(adminRoom, ("(Attempted to) reset password of user <code>" + user + "</code> to <code>" + setpasswd + "</code>"))
 
-
-
-    // resetUserPwd(localpart)
-
 })
 
 commandHandlers.set("deactivate", async ({contentByWords, event}) => {
