@@ -410,7 +410,7 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
     return;
   }
 
-  let userMxid = "@" + localpart + ":" + server
+  let userMxid = "@" + user + ":" + server
 
   await makeUserReq("PUT", "profile", userMxid, "avatar_url", userToken, {"avatar_url":deactivatedpfp})
   await makeUserReq("PUT", "profile", userMxid, "displayname", userToken, {"avatar_url":deactivatedpfp})
