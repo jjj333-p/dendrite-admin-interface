@@ -168,15 +168,14 @@ async function makeUserReq (reqType, command, arg1, arg2, body) {
   try {
 
     //make the request and return whatever the promise resolves to
-    var response = await fetch(url, {
+    var response = await (await fetch(url, {
         method: reqType,
         headers: {
           "Authorization": "Bearer " + accessToken,
           "Content-Type": "application/json"
         },
         body:bodyStr
-      })
-    var r = await response.text()
+      })).json()
 
   //.catch
   } catch (e) {
@@ -184,9 +183,9 @@ async function makeUserReq (reqType, command, arg1, arg2, body) {
   }
 
   //.then
-  client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + r + "</code></pre>"))
+  client.sendHtmlNotice(adminRoom, ("Ran <code>"+ url + "</code> with response <pre><code>" + JSON.stringify(response) + "</code></pre>"))
 
-  return await response.json()
+  return response
 
 }
 
