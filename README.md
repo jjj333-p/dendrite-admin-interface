@@ -1,14 +1,23 @@
 # dendrite-admin-interface
 A bot interface for administrating a Dendrite server using the administration api and some database interfacing
 
-This project is in it's very baby stages. Contributions are very welcome however it is recomended at this time that you join the discussion room before contributing to ensure your contributions align with the end goal of the project
+Contributions are very welcome however it is recomended at this time that you join the discussion room before contributing to ensure your contributions align with the end goal of the project
 
 Feel free to make a issue for each requested feature so when I finally get time I have a list to go through and check off.
 
-You're gonna want to clone or whatever else the code dir, run `npm install``, copy examples/login.yaml to db/login.yaml and fill it out (instructions inside) and then you should be able to run it
-(better instructions to come eventually lmao)
+Space: [#admin-interface:pain.agency](https://matrix.to/#/#admin-interface:pain.agency) | 
+Discussion Room: [#admin-interface-support:pain.agency](https://matrix.to/#/%23admin-interface-support%3Apain.agency)
 
-Currently implemented commands:
+## Setup
+
+- Make sure you have a half recent version of node and npm installed, I currently use node `v18.18.0` (check with `node -v`) and npm version `9.2.0` on my vps. If you run debian like I do on my vps, you may wish to get a more up to date version of node from the snap store or building from source.
+- Download and Unpack latest stable or beta release .zip or .tar.gz from https://github.com/jjj333-p/dendrite-admin-interface/releases or clone from `main` branch if you like to be on the *bleeding* edge.
+- Run `npm install` which should install all the required dependencies.
+- Copy the file found at `examples/login.yaml` to `db/login.yaml` and fill out that information. There are instructions for filling out that information within the comments of the example file.
+- Run the bot (`node index.js`).
+- Commands are available only in the administration room defined in the login.yaml file.
+
+## Currently implemented commands:
 
 - `evacuate User MXID | Room ID | Room Alias> ?<--preserve | -p>` 
     
@@ -27,9 +36,7 @@ Currently implemented commands:
 - `deactivate <mxid/localpart>`
 
     deactivates the given user
-    > **TODO:** Add confirmation prompt
     - `mxid/localpart` - you can supply either the localpart of a user (i.e. `jjj333`), or the entire mxid (i.e. `@jjj333:pain.agency`). Do note that this has to be a local user as there is nothing that can be done for remote users.
     - Sets the displayname and pfp to those defined in the bot login.yaml as dendrite doesnt remove these before deactivating, therefore we need to sanatize, and we can add flair to it in the meantime.
-
-Space: [#admin-interface:pain.agency](https://matrix.to/#/#admin-interface:pain.agency)
-Discussion Room: [#admin-interface-support:pain.agency](https://matrix.to/#/%23admin-interface-support%3Apain.agency)
+    - Will ask for confirmation to prevent accidental runs
+    - **NOTE**: this command is permanent, use with caution!
