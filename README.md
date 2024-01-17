@@ -1,7 +1,7 @@
 # dendrite-admin-interface
 A bot interface for administrating a Dendrite server using the administration api and some database interfacing
 
-Contributions are very welcome however it is recomended at this time that you join the discussion room before contributing to ensure your contributions align with the end goal of the project
+Contributions are very welcome however it is recommended  at this time that you join the discussion room before contributing to ensure your contributions align with the end goal of the project
 
 Feel free to make a issue for each requested feature so when I finally get time I have a list to go through and check off.
 
@@ -37,6 +37,6 @@ Discussion Room: [#admin-interface-support:pain.agency](https://matrix.to/#/%23a
 
     deactivates the given user
     - `mxid/localpart` - you can supply either the localpart of a user (i.e. `jjj333`), or the entire mxid (i.e. `@jjj333:pain.agency`). Do note that this has to be a local user as there is nothing that can be done for remote users.
-    - Sets the displayname and pfp to those defined in the bot login.yaml as dendrite doesnt remove these before deactivating, therefore we need to sanatize, and we can add flair to it in the meantime.
+    - Sets the displayname and pfp to those defined in the bot login.yaml as dendrite doesnt remove these before deactivating, therefore we need to sanitize, and we can add flair to it in the meantime.
     - Will ask for confirmation to prevent accidental runs
     - **NOTE**: this command is permanent, use with caution!
