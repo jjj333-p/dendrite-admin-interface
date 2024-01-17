@@ -503,10 +503,10 @@ eventHandlers.set("m.room.message", async (roomId, event) => {
   //if no handler exists indicate its an unknown command and return out
   if (!handler) {
 
-    await datapoints.client.sendEvent(datapoints.roomId, "m.reaction", ({
+    await client.sendEvent(roomId, "m.reaction", ({
 
         "m.relates_to": {
-            "event_id":datapoints.event["event_id"],
+            "event_id":event["event_id"],
             "key":"❌ | invalid cmd",
             "rel_type": "m.annotation"
         }
