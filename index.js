@@ -60,6 +60,7 @@ const client = new MatrixClient(homeserver, accessToken, storage);
 //preallocate variables so they have a global scope
 let mxid; 
 let server;
+let queuedConfirmation;
 
 //for temporary passord generation
 function generateSecureOneTimeCode(length) {
@@ -270,6 +271,11 @@ function evacuateRoomAlias(roomAlias, preserve) {
 //data structure to hold commands
 let commandHandlers = new Map()
 
+//if confirm command is ran, run the function queued.
+commandHandlers.set("confirm", async () => {
+  if (queuedConfirmation) queuedConfirmation()
+})
+
 //evacuate command
 commandHandlers.set("evacuate", ({contentByWords}) => {
 
@@ -411,46 +417,55 @@ commandHandlers.set("deactivate", async ({contentByWords, event}) => {
 
   } 
 
-  //reset the password as to lock out the user
-  let newpwd = await resetUserPwd(user, null, true)
-
-  //idk some race conditions, this makes it work more reliably so sure
-  await delay(1000)
-
-  //make login request
-  let response = await makeUserReq("POST", "login", null, null, null, {
-    "type": "m.login.password",
-    "identifier": {
-        "type": "m.id.user",
-        "user": user,
-    },
-    "password": newpwd,
-  })
-
-  let userToken = response["access_token"]
-
-  //no token means no successful login
-  if (!userToken) {
-    
-    client.sendNotice(adminRoom, "❌ | unable to log in. This may just be a momentary error.")
-
-    return;
-  }
-
   let userMxid = "@" + user + ":" + server
 
-  //sanatize pfp and displayname
-  await makeUserReq("PUT", "profile", userMxid, "avatar_url", userToken, {"avatar_url":deactivatedpfp})
-  await makeUserReq("PUT", "profile", userMxid, "displayname", userToken, {"displayname":deactivateddn})
+  //require confirmation as this is a permanent action
+  client.sendHtmlNotice(adminRoom, ("Please confirm your intention to deactivate <code>" + userMxid + "</code> by running <code>" + prefix + "confirm</code>. <span style=\"color:red;\"><b>THIS IS A PERMANENT ACTION!!</b></span>"))
 
-  //deactivate the account
-  await makeUserReq("POST", "account", "deactivate", null, userToken, {
-    "auth": {
-        "type": "m.login.password",
-        "user": user,
-        "password": newpwd,
-    },
-  })
+  queuedConfirmation = async () => {
+
+    queuedConfirmation = null;
+
+    //reset the password as to lock out the user
+    let newpwd = await resetUserPwd(user, null, true)
+
+    //idk some race conditions, this makes it work more reliably so sure
+    await delay(1000)
+
+    //make login request
+    let response = await makeUserReq("POST", "login", null, null, null, {
+      "type": "m.login.password",
+      "identifier": {
+          "type": "m.id.user",
+          "user": user,
+      },
+      "password": newpwd,
+    })
+
+    let userToken = response["access_token"]
+
+    //no token means no successful login
+    if (!userToken) {
+      
+      client.sendNotice(adminRoom, "❌ | unable to log in. This may just be a momentary error.")
+
+      return;
+    }
+
+    //sanatize pfp and displayname
+    await makeUserReq("PUT", "profile", userMxid, "avatar_url", userToken, {"avatar_url":deactivatedpfp})
+    await makeUserReq("PUT", "profile", userMxid, "displayname", userToken, {"displayname":deactivateddn})
+
+    //deactivate the account
+    await makeUserReq("POST", "account", "deactivate", null, userToken, {
+      "auth": {
+          "type": "m.login.password",
+          "user": user,
+          "password": newpwd,
+      },
+    })
+
+  }
 
 })
 
