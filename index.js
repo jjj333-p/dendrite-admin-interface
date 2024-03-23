@@ -329,6 +329,8 @@ async function createAccount(username, suppliedPwd) {
 
 	const mac = generate_mac(nonce, username, pwd);
 
+	console.log(mac);
+
 	makeAdminReq("_synapse", "POST", "v1", "register", null, {
 		nonce: nonce,
 		username: username,
