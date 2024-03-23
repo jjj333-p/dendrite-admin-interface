@@ -16,7 +16,7 @@ import crypto from "node:crypto";
 let loginFile = fs.readFileSync("./db/login.yaml", "utf8");
 const loginParsed = yaml.load(loginFile);
 const homeserver = loginParsed.homeserverUrl;
-const port = loginParsed.port;
+const addr = loginParsed.curlAddress;
 const accessToken = loginParsed.loginToken;
 let adminRoom = loginParsed.administrationRoom;
 const prefix = loginParsed.prefix;
@@ -171,7 +171,7 @@ Makes an internal request to the global `homeserver` address following standard 
 async function makeAdminReq(software, reqType, command, arg1, arg2, body) {
 	//base url guaranteed to always be there
 	//Dendrite only accepts requests from localhost
-	let url = `http://localhost:${port}/${software}/admin/${command}`;
+	let url = `${addr}/${software}/admin/${command}`;
 
 	//if there is a first argument add it
 	if (arg1) url += `/${arg1}`;
@@ -216,7 +216,7 @@ async function makeAdminReq(software, reqType, command, arg1, arg2, body) {
 async function makeUserReq(reqType, command, arg1, arg2, userToken, body) {
 	//base url guaranteed to always be there
 	//Dendrite only accepts requests from localhost
-	let url = `http://localhost:${port}/_matrix/client/v3/${command}`;
+	let url = `${addr}/_matrix/client/v3/${command}`;
 
 	//if there is a first argument add it
 	if (arg1) url += `/${arg1}`;
@@ -326,7 +326,7 @@ async function createAccount(username, suppliedPwd) {
 	//get nonce
 	const nonce = (
 		await (
-			await fetch(`http://localhost:${port}/_synapse/admin/v1/register`, {
+			await fetch(`${addr}/_synapse/admin/v1/register`, {
 				method: "GET",
 			})
 		).json()
