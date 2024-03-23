@@ -320,11 +320,13 @@ function generate_mac(nonce, user, password) {
 
 async function createAccount(username, suppliedPwd) {
 	//get nonce
-	const nonce = await (
-		await fetch(`http://localhost:${port}/_synapse/admin/v1/register`, {
-			method: "GET",
-		})
-	).json();
+	const nonce = (
+		await (
+			await fetch(`http://localhost:${port}/_synapse/admin/v1/register`, {
+				method: "GET",
+			})
+		).json()
+	).nonce;
 
 	const pwd = suppliedPwd || generateSecureOneTimeCode(35);
 
