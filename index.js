@@ -62,6 +62,12 @@ if (!dendriteconfig?.global) {
 	);
 	process.exit(1);
 }
+if (!dendriteconfig.client_api) {
+	console.log(
+		"No client_api block found in the dendrite configuration file. Is this a dendrite configuration file?",
+	);
+	process.exit(1);
+}
 
 //the bot sync something idk bro it was here in the example so i dont touch it ;-;
 const storage = new SimpleFsStorageProvider("bot.json");
@@ -298,9 +304,11 @@ function evacuateRoomAlias(roomAlias, preserve) {
 }
 
 function generate_mac(nonce, user, password) {
-	const shared_secret = "your_shared_secret"; // Define your shared secret here
 	const admin = false; // Hardcoded admin to be false
-	const mac = crypto.createHmac("sha1", shared_secret);
+	const mac = crypto.createHmac(
+		"sha1",
+		dendriteconfig.client_api.registration_shared_secret,
+	);
 
 	mac.update(nonce);
 	mac.update(Buffer.from([0]));
@@ -308,7 +316,7 @@ function generate_mac(nonce, user, password) {
 	mac.update(Buffer.from([0]));
 	mac.update(password);
 	mac.update(Buffer.from([0]));
-	mac.update("notadmin");
+	mac.update(Buffer.from("notadmin"));
 
 	return mac.digest("hex");
 }
