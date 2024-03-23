@@ -15,15 +15,15 @@ import crypto from "node:crypto";
 //Parse YAML configuration file
 let loginFile = fs.readFileSync("./db/login.yaml", "utf8");
 const loginParsed = yaml.load(loginFile);
-const homeserver = loginParsed["homeserver-url"];
-const port = loginParsed["port"];
-const accessToken = loginParsed["login-token"];
-let adminRoom = loginParsed["administration-room"];
-const prefix = loginParsed["prefix"];
-const authorizedUsers = loginParsed["authorized-users"];
-const dendriteyaml = loginParsed["dendriteyaml"];
-const deactivatedpfp = loginParsed["deactivatedpfp"];
-const deactivateddn = loginParsed["deactivateddn"];
+const homeserver = loginParsed.homeserverUrl;
+const port = loginParsed.port;
+const accessToken = loginParsed.loginToken;
+let adminRoom = loginParsed.administrationRoom;
+const prefix = loginParsed.prefix;
+const authorizedUsers = loginParsed.authorizedUsers;
+const dendriteyaml = loginParsed.dendriteYaml;
+const deactivatedpfp = loginParsed.deactivatedPfp;
+const deactivateddn = loginParsed.deactivatedDn;
 
 //if the interface config does not supply a path
 if (!dendriteyaml) {

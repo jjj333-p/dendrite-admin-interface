@@ -4,7 +4,7 @@
 # The address that the homeserver client api is reached on
 # The safest setting will always to be the direct domain of dendrite, for pain.agency this would be https://matrix.pain.agency (delegation)
 # for some reason it will bork if you try to input a localhost address. Perhaps it is attempting to make a SSL connection
-homeserver-url: 'http://matrix.'
+homeserverUrl: 'http://matrix.'
 
 # Localhost port to run endpoints on
 # Dendrite endpoints must be run from localhost.
@@ -15,7 +15,7 @@ port: '8008'
 # The login token for the bot to use
 # This should be an admin account as the bot will use this to run Dendrite admin endpoints from
 # it is recomended that the bot have its own account to prevent conflict
-login-token: 'token'
+loginToken: 'token'
 
 # The room that administration commands can be run from
 # Be careful with this room, any commands sent in that room will be accepted, regardless of PL
@@ -23,27 +23,27 @@ login-token: 'token'
 # which will be an unfederated room 99% of the time.
 # At this time the bot does not support encrypted rooms as it is expected for the room to remain only on the homeserver it administers.
 # If there is no valid RoomID here, the bot wll create one, invite the 'authorized-users', and give them PL100
-administration-room: ''
+administrationRoom: ''
 
 # The prefix to have on all command messages.
 prefix: '.'
 
 # Authorized Users
 # Users listed here will be invited and given PL100 when the bot creates a new Administration room
-authorized-users:
+authorizedUsers:
   - '@bob:example.org'
 
 # Deactivated user PFP
 # This is the profile image (in mxc:// format) that will be set to user profiles before deactivation. if left blank it will simply be removed
 # Recommended is blank or `mxc://matrix.org/LaVsSRIBaLkOwvehbwDxEDio`
-deactivatedpfp: ''
+deactivatedPfp: ''
 
 # Deactivated user DisplayName
 # Display name to set to any deactivated user. Unsure what will happen if left blank.
 # Recommended is `Deactivated User`
-deactivateddn: 'Deactivated User'
+deactivatedDn: 'Deactivated User'
 
 # Location of dendrite.yaml
 # the interface steals database information from the dendrite.yaml configuration file to work
 # make sure whatever user is running the interface has permissions to open the dendrite.yaml file
-dendriteyaml: '/opt/dendrite/dendrite.yaml'
+dendriteYaml: '/opt/dendrite/dendrite.yaml'
