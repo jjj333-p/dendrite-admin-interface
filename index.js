@@ -161,10 +161,11 @@ client.start().then(async () => {
 /*
 Makes an internal request to the global `homeserver` address following standard dendrite request.
 */
-async function makeDendriteReq(reqType, command, arg1, arg2, body) {
+
+async function makeAdminReq(software, reqType, command, arg1, arg2, body) {
 	//base url guaranteed to always be there
 	//Dendrite only accepts requests from localhost
-	let url = `http://localhost:${port}/_dendrite/admin/${command}`;
+	let url = `http://localhost:${port}/${software}/admin/${command}`;
 
 	//if there is a first argument add it
 	if (arg1) url += `/${arg1}`;
@@ -254,15 +255,13 @@ async function makeUserReq(reqType, command, arg1, arg2, userToken, body) {
 	return response;
 }
 
-async function resetUserPwd(localpart, p, logout) {
-	let password = p;
-
+async function resetUserPwd(localpart, suppliedPwd, logout) {
 	const userMxid = `@${localpart}:${server}`;
 
-	if (!password) password = generateSecureOneTimeCode(35);
+	const pwd = suppliedPwd || generateSecureOneTimeCode(35);
 
-	makeDendriteReq("POST", "resetPassword", userMxid, null, {
-		password: password,
+	makeAdminReq("_dendrite", "POST", "resetPassword", userMxid, null, {
+		password: pwd,
 		logout_devices: logout,
 	});
 
@@ -270,16 +269,16 @@ async function resetUserPwd(localpart, p, logout) {
 }
 
 async function evacuateUser(mxid) {
-	makeDendriteReq("POST", "evacuateUser", mxid);
+	makeAdminReq("_dendrite", "POST", "evacuateUser", mxid);
 }
 
 async function purgeRoom(roomId) {
-	makeDendriteReq("POST", "purgeRoom", roomId);
+	makeAdminReq("_dendrite", "POST", "purgeRoom", roomId);
 }
 
 //run dendrite admin endpoint to evacuate all users from `roomId`
 async function evacuateRoom(roomId, preserve) {
-	makeDendriteReq("POST", "evacuateRoom", roomId).then((e) => {
+	makeAdminReq("_dendrite", "POST", "evacuateRoom", roomId).then((e) => {
 		//if preserve flag not provided, proceed to purgeRoom
 		if (!preserve) purgeRoom(roomId);
 	});
@@ -296,6 +295,51 @@ function evacuateRoomAlias(roomAlias, preserve) {
 				`❌ | Ran into the following error resolving that roomID:\n<pre><code>${e}</code></pre>`,
 			),
 		);
+}
+
+function generate_mac(nonce, user, password) {
+	const shared_secret = "your_shared_secret"; // Define your shared secret here
+	const admin = false; // Hardcoded admin to be false
+	const mac = crypto.createHmac("sha1", shared_secret);
+
+	mac.update(nonce);
+	mac.update(Buffer.from([0]));
+	mac.update(user);
+	mac.update(Buffer.from([0]));
+	mac.update(password);
+	mac.update(Buffer.from([0]));
+	mac.update(Buffer.from("notadmin"));
+
+	if (user_type) {
+		mac.update(Buffer.from([0]));
+		mac.update(user_type);
+	}
+
+	return mac.digest("hex");
+}
+
+async function createAccount(username, suppliedPwd) {
+	//get nonce
+	const nonce = await (
+		await fetch(`http://localhost:${port}/_synapse/admin/v1/register`, {
+			method: "GET",
+		})
+	).json();
+
+	const pwd = suppliedPwd || generateSecureOneTimeCode(35);
+
+	const mac = generate_mac(nonce, username, pwd);
+
+	makeAdminReq("_synapse", "POST", "v1", "register", null, {
+		nonce: nonce,
+		username: username,
+		displayname: username,
+		password: pwd,
+		admin: false,
+		mac: mac,
+	});
+
+	return pwd;
 }
 
 //data structure to hold commands
@@ -349,6 +393,49 @@ commandHandlers.set("evacuate", ({ contentByWords }) => {
 			);
 			break;
 	}
+});
+
+commandHandlers.set("newaccount", async ({ contentByWords, event }) => {
+	//first argument provided
+	let user = contentByWords[1];
+	if (!user) {
+		client.sendHtmlNotice(adminRoom, "❌ | no user indicated.");
+
+		return;
+	}
+
+	//remove the @ no matter if its a mxid or localpart
+	//user may mistakenly provide @localpart or localpart:server.tld and that is okay
+	// .substring(1) just removes the first char
+	if (user.startsWith("@")) user = user.substring(1);
+
+	//decides if its a mxid or localpart
+	if (user.includes(":")) {
+		//if its not a local user we cant do anything
+		if (!user.endsWith(`:${server}`)) {
+			client.sendHtmlNotice(
+				adminRoom,
+				`❌ | <code>${contentByWords[1]}</code> does not appear to be a valid user ID.`,
+			);
+
+			return;
+		}
+
+		//we want only the localpart
+		//while there are normal restrictions on user account chars, @ and : are the only characters that truly cannot be allowed
+		//it is possible for admins to modify dendrite to remove those restrictions, and this interface need not restrict to that needlessly
+		user = user.split(":")[0];
+	}
+
+	//second argument is password
+	const passwd = contentByWords[2];
+
+	const setpasswd = await createAccount(user, passwd);
+
+	client.sendHtmlNotice(
+		adminRoom,
+		`(Attempted to) reset password of user <code>${user}</code> to <code>${setpasswd}</code>`,
+	);
 });
 
 commandHandlers.set("passwd", async ({ contentByWords, event }) => {
