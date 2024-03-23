@@ -271,7 +271,7 @@ async function resetUserPwd(localpart, suppliedPwd, logout) {
 		logout_devices: logout,
 	});
 
-	return password;
+	return pwd;
 }
 
 async function evacuateUser(mxid) {
@@ -303,6 +303,7 @@ function evacuateRoomAlias(roomAlias, preserve) {
 		);
 }
 
+//js rewrite of code found at https://matrix-org.github.io/synapse/latest/admin_api/register_api.html
 function generate_mac(nonce, user, password) {
 	const admin = false; // Hardcoded admin to be false
 	const mac = crypto.createHmac(
@@ -331,14 +332,13 @@ async function createAccount(username, suppliedPwd) {
 		).json()
 	).nonce;
 
+	//if no password supplied, generate one
 	const pwd = suppliedPwd || generateSecureOneTimeCode(35);
 
-	console.log(nonce);
-
+	//generate mac (see documentation)
 	const mac = generate_mac(nonce, username, pwd);
 
-	console.log(mac);
-
+	//https://matrix-org.github.io/synapse/latest/admin_api/register_api.html
 	makeAdminReq("_synapse", "POST", "v1", "register", null, {
 		nonce: nonce,
 		username: username,
