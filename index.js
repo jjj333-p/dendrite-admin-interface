@@ -328,6 +328,8 @@ async function createAccount(username, suppliedPwd) {
 
 	const pwd = suppliedPwd || generateSecureOneTimeCode(35);
 
+	console.log(nonce);
+
 	const mac = generate_mac(nonce, username, pwd);
 
 	makeAdminReq("_synapse", "POST", "v1", "register", null, {
