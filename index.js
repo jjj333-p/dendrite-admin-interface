@@ -308,7 +308,7 @@ function generate_mac(nonce, user, password) {
 	mac.update(Buffer.from([0]));
 	mac.update(password);
 	mac.update(Buffer.from([0]));
-	mac.update(Buffer.from("notadmin"));
+	mac.update("notadmin");
 
 	return mac.digest("hex");
 }
