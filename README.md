@@ -33,6 +33,12 @@ Discussion Room: [#admin-interface-support:pain.agency](https://matrix.to/#/%23a
         - `f` or `false` to keep all sessions logged in.
     - `? password` - optionally set a password to reset to. If no password is supplied, it will default to a randomized 35 byte base64 string which will be returned. Because of Dendrite the password has to be at least 8 characters. Due to technical difficulties you can not have any spaces in a password set through this interface.
 
+- `newaccount <mxid/localpart> ?<password>`
+
+    Create a new normal user account.
+    - `mxid/localpart` - the username to create for the user. This can be either just the localpart, or the full mxid. 
+    - `? password` - password to set for the new account. If none is provided a base64 string of 35 bytes will be generated and returned.
+
 - `deactivate <mxid/localpart>`
 
     deactivates the given user
