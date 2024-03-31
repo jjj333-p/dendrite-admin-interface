@@ -284,7 +284,6 @@ async function purgeRoom(roomId) {
 
 //run dendrite admin endpoint to evacuate all users from `roomId`
 async function evacuateRoom(roomId, preserve) {
-	console.log(roomId);
 	makeAdminReq("_dendrite", "POST", "evacuateRoom", roomId).then((e) => {
 		//if preserve flag not provided, proceed to purgeRoom
 		if (!preserve) purgeRoom(roomId);
@@ -293,7 +292,6 @@ async function evacuateRoom(roomId, preserve) {
 
 //resolves roomAlias to roomId, and runs evacuateRoom(roomId)
 function evacuateRoomAlias(roomAlias, preserve) {
-	console.log(roomAlias);
 	client
 		.resolveRoom(roomAlias)
 		.then((r) => evacuateRoom(r, preserve))
