@@ -1,3 +1,7 @@
+this codebase has basically been abandoned since march 2024 and dendrite is basically abandoned i dont even know
+<img width="1654" height="994" alt="image" src="https://github.com/user-attachments/assets/061d94ce-b381-4df2-a852-b9eacf036932" />
+
+
 # dendrite-admin-interface
 A bot interface for administrating a Dendrite server using the administration api and some database interfacing
 
